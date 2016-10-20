@@ -7,28 +7,28 @@ var ChessPieceType = {king: "K", queen: "Q", knight: "N", bishop: "B", rook: "R"
 var ChessHelper = (function(){
     return{
         isCoordinateWithinBoundaries: function(coordinate){
-            return coordinate.x < 8 && coordinate.x >= 0 && coordinate.y < 8 && coordinate.y >= 0;
+            return coordinate.row < 8 && coordinate.row >= 0 && coordinate.col < 8 && coordinate.col >= 0;
         },
-        // Convert a coordinate(x,y) to an algebraic notation as a string
+        // Convert a coordinate(row,col) to an algebraic notation as a string
         // (eg.) (1,0) becomes "a1"
         formatCoordinateToAlgebraicNotation: function(coordinate){
-            var coordinateRank = coordinate.x+1; // rows
-            var coordinateFile = String.fromCharCode(97 + coordinate.y); // letters a -> h denoting the column
+            var coordinateRank = coordinate.row+1; // rows
+            var coordinateFile = String.fromCharCode(97 + coordinate.col); // letters a -> h denoting the column
             return coordinateFile + coordinateRank;
         }
     }
 })();
 
-// X Y Coordinate
-function Coordinate(x, y){
-    this.x = x; // x is the row coordinate because it is easier to work with for the initial chess layout when all the pieces are in organized rows
-    this.y = y; // column coordinate
+// row col Coordinate
+function Coordinate(row, col){
+    this.row = row; // row coordinate
+    this.col = col; // column coordinate
 }
 
 // Base ChessPiece Class
-function ChessPiece(chessPieceType, playerType, x , y){
+function ChessPiece(chessPieceType, playerType, row , col){
     this.playerType = playerType;
-    this.coordinate = new Coordinate(x,y);
+    this.coordinate = new Coordinate(row,col);
     this.chessPieceType = chessPieceType;
 }
 // check if piece is white or black
@@ -43,68 +43,112 @@ ChessPiece.prototype.getAvailableMoves = function(board){
 };
 
 // King Piece
-function King(playerType, x, y){
-    ChessPiece.call(this, ChessPieceType.king, playerType, x, y);
+function King(playerType, row, col){
+    ChessPiece.call(this, ChessPieceType.king, playerType, row, col);
 }
 King.prototype = Object.create(ChessPiece.prototype);
 King.prototype.constructor = ChessPiece;
 
 // Queen Piece
-function Queen(playerType, x, y){
-    ChessPiece.call(this, ChessPieceType.queen, playerType, x, y);
+function Queen(playerType, row, col){
+    ChessPiece.call(this, ChessPieceType.queen, playerType, row, col);
 }
 Queen.prototype = Object.create(ChessPiece.prototype);
 Queen.prototype.constructor = ChessPiece;
 
 // Bishop Piece
-function Bishop(playerType, x, y){
-    ChessPiece.call(this, ChessPieceType.bishop, playerType, x, y);
+function Bishop(playerType, row, col){
+    ChessPiece.call(this, ChessPieceType.bishop, playerType, row, col);
 }
 Bishop.prototype = Object.create(ChessPiece.prototype);
 Bishop.prototype.constructor = ChessPiece;
 
 // Rook Piece
-function Rook(playerType, x, y){
-    ChessPiece.call(this, ChessPieceType.rook, playerType, x, y);
+function Rook(playerType, row, col){
+    ChessPiece.call(this, ChessPieceType.rook, playerType, row, col);
 }
 Rook.prototype = Object.create(ChessPiece.prototype);
 Rook.prototype.constructor = ChessPiece;
 
 // Knight Piece
-function Knight(playerType, x, y){
-    ChessPiece.call(this, ChessPieceType.knight, playerType, x, y);
+function Knight(playerType, row, col){
+    ChessPiece.call(this, ChessPieceType.knight, playerType, row, col);
 }
 Knight.prototype = Object.create(ChessPiece.prototype);
 Knight.prototype.constructor = ChessPiece;
-// Knight.prototype.move = function(){
-//     // ChessPiece.prototype.move.call(this);
-//     // console.log("I move like lksdjflj");
-// }
+// get all available moves for a knight
+// Rules:
+//      1) Knights can move 2 spaces diagonally and one space vertically
+//      2) Knights can jump over other pieces
+Knight.prototype.getAvailableMoves = function(board){
+    var availableMoves = [];
+    var possibleCoordinates = [new Coordinate(this.coordinate.row - 2, this.coordinate.col + 1), // North 2, right 1
+                                new Coordinate(this.coordinate.row + 1, this.coordinate.col + 2), // East 2, North 1
+                                new Coordinate(this.coordinate.row - 1, this.coordinate.col + 2), // East 2, South 1
+                                new Coordinate(this.coordinate.row + 2, this.coordinate.col + 1), // South 2, East 1
+                                new Coordinate(this.coordinate.row + 2, this.coordinate.col - 1), // South 2, West 1
+                                new Coordinate(this.coordinate.row + 1, this.coordinate.col - 2), // West 2, South 1
+                                new Coordinate(this.coordinate.row - 1, this.coordinate.col - 2), // West 2, North 1
+                                new Coordinate(this.coordinate.row - 2, this.coordinate.col - 1)]; // North 2, West 1
+
+    possibleCoordinates.forEach(function(newCoordinate){
+        // check boundaries
+        if (ChessHelper.isCoordinateWithinBoundaries(newCoordinate)) {
+            var chessPiece = board[newCoordinate.row][newCoordinate.col];
+            var newMove = new Move(this.chessPieceType, this.playerType, this.coordinate, newCoordinate);
+            if (chessPiece == null ||
+                this.isWhite() && chessPiece.playerType == PlayerType.black || // white piece can capture black
+                !this.isWhite() && chessPiece.playerType == PlayerType.white) { // black can capture white
+                // empty space -> knight can jump here
+                availableMoves.push(newMove);
+            }
+        }
+    }.bind(this));
+    return availableMoves;
+};
 
 // Pawn Piece
-function Pawn(playerType, x, y){
-    ChessPiece.call(this, ChessPieceType.pawn, playerType, x, y);
-    //this.blah = "gada";
-    //var hasMoved = false;
-    //var init = function(){
-        //var test = this.isWhite();
-
-  //  }.bind(this);
-   // init();
+function Pawn(playerType, row, col){
+    ChessPiece.call(this, ChessPieceType.pawn, playerType, row, col);
 }
 Pawn.prototype = Object.create(ChessPiece.prototype);
 Pawn.prototype.constructor = ChessPiece;
-Pawn.prototype.getMovesGivenAMaxMoveCount = function(board, availableMoveCount){
+
+// get all available moves for the pawn
+// Rules:
+//      1) pawns can move forward at most 2 spaces
+//          a) any piece in directly in front will block movement for the pawn
+//          b) for its initial move, the pawn can move forward 2 spaces, otherwise it can only move forward one
+//      2) pawns can capture diagonally one space in front (only if there is an enemy piece)
+//      3) pawns can only move forward
+Pawn.prototype.getAvailableMoves = function(board){
+
     var availableMoves = [];
+    // get available moves forward for pawn (1 or 2 if it hasn't moved yet)
+    var availableMoveCount = 1;
+    if(this.isWhite()){
+        if(this.coordinate.row == 1){
+            availableMoveCount = 2; // has not moved yet, can move twice
+        }else{
+            availableMoveCount = 1;
+        }
+    }else{
+        if(this.coordinate.row == 6){
+            availableMoveCount = 2; // has not moved yet, can move twice
+        }else{
+            availableMoveCount = 1;
+        }
+    }
+
     // check pawn moving forward 1 to 2 spaces
     var count = 1;
     while(count <= availableMoveCount){
-        var newX = this.coordinate.x+count;
+        var newRow = this.coordinate.row+count;
         if(!this.isWhite()){
-            newX = this.coordinate.x-count;
+            newRow = this.coordinate.row-count;
         }
-        var newCoordinate = new Coordinate(newX, this.coordinate.y);
-        if(ChessHelper.isCoordinateWithinBoundaries(newCoordinate) && board[newCoordinate.x][newCoordinate.y] == null){
+        var newCoordinate = new Coordinate(newRow, this.coordinate.col);
+        if(ChessHelper.isCoordinateWithinBoundaries(newCoordinate) && board[newCoordinate.row][newCoordinate.col] == null){
             // pawn can move count number of spaces in front
             var newMove = new Move(this.chessPieceType, this.playerType, this.coordinate, newCoordinate);
             availableMoves.push(newMove);
@@ -115,24 +159,24 @@ Pawn.prototype.getMovesGivenAMaxMoveCount = function(board, availableMoveCount){
         count++;
     }
     // check if pawn can move up or down depending on playerType
-    var newX = this.coordinate.x + 1;
+    var newRow = this.coordinate.row + 1;
     if(!this.isWhite()){
-        newX = this.coordinate.x - 1;
+        newRow = this.coordinate.row - 1;
     }
     // check up or down depending on playerType
     [-1, 1].forEach(function(leftOrRightIndex){
-        var newDiagCoordinate = new Coordinate(newX, this.coordinate.y + leftOrRightIndex);
+        var newDiagCoordinate = new Coordinate(newRow, this.coordinate.col + leftOrRightIndex);
         // check +1 row or -1 row for white or black
         if (ChessHelper.isCoordinateWithinBoundaries(newDiagCoordinate)){
             if(this.isWhite()){
-                var currentPiece = board[newDiagCoordinate.x][newDiagCoordinate.y];
+                var currentPiece = board[newDiagCoordinate.row][newDiagCoordinate.col];
                 if(currentPiece != null && currentPiece.playerType == PlayerType.black){
                     // current piece is white and is checking that the destination coordinate contains a black piece
                     var newMove = new Move(this.chessPieceType, this.playerType, this.coordinate, newDiagCoordinate);
                     availableMoves.push(newMove);
                 }
             }else{
-                var currentPiece = board[newDiagCoordinate.x][newDiagCoordinate.y];
+                var currentPiece = board[newDiagCoordinate.row][newDiagCoordinate.col];
                 if(currentPiece != null && currentPiece.playerType == PlayerType.white){
                     // current piece is black and is checking that the destination coordinate contains a white piece
                     var newMove = new Move(this.chessPieceType, this.playerType, this.coordinate, newDiagCoordinate);
@@ -145,33 +189,13 @@ Pawn.prototype.getMovesGivenAMaxMoveCount = function(board, availableMoveCount){
     return availableMoves;
 };
 
-// get all available moves for the pawn
-Pawn.prototype.getAvailableMoves = function(board){
-    // get available moves forward for pawn (1 or 2 if it hasn't moved yet)
-    var availableMoveCount = 1;
-    if(this.isWhite()){
-        if(this.coordinate.x == 1){
-            availableMoveCount = 2; // has not moved yet, can move twice
-        }else{
-            availableMoveCount = 1;
-        }
-    }else{
-        if(this.coordinate.x == 6){
-            availableMoveCount = 2; // has not moved yet, can move twice
-        }else{
-            availableMoveCount = 1;
-        }
-    }
-    return this.getMovesGivenAMaxMoveCount(board, availableMoveCount);
-};
-
 // ChessBoard
 // config = chess board configuration as 8x8 array of strings
 function ChessBoard(chessBoardConfig){
     this.playerWhite = new Player(PlayerType.white);
     this.playerBlack = new Player(PlayerType.black);
-    this.rows = 8;
-    this.cols = 8;
+    this.numRows = 8;
+    this.numCols = 8;
 
     // rows x cols board of ChessPieces
     // for a (x,y) coordinate system
@@ -180,8 +204,8 @@ function ChessBoard(chessBoardConfig){
 
     // parse configuration grid to 2d array of ChessPiece objects
     var parseConfiguration = function(){
-        for(var i = 0; i < this.rows; i++){
-            for(var j = 0; j< this.cols; j++){
+        for(var i = 0; i < this.numRows; i++){
+            for(var j = 0; j< this.numCols; j++){
                 if(chessBoardConfig[i][j] != null){
                     var chessPiece = chessPieceStringToObject(chessBoardConfig[i][j], i ,j);
                     this.board[i][j] = chessPiece;
@@ -198,7 +222,7 @@ function ChessBoard(chessBoardConfig){
     }.bind(this);
 
     // convert string to object to better track the chess piece
-    var chessPieceStringToObject = function(code, x, y){
+    var chessPieceStringToObject = function(code, row, col){
         if (code.length < 2){
             return null;
         }
@@ -210,25 +234,25 @@ function ChessBoard(chessBoardConfig){
 
         switch(code[1]){
             case "R":
-                return new Rook(playerType, x, y);
+                return new Rook(playerType, row, col);
                 break;
             case "N":
-                return new Knight(playerType, x, y);
+                return new Knight(playerType, row, col);
                 break;
             case "B":
-                return new Bishop(playerType, x, y);
+                return new Bishop(playerType, row, col);
                 break;
             case "Q":
-                return new Queen(playerType, x, y);
+                return new Queen(playerType, row, col);
                 break;
             case "K":
-                return new King(playerType, x, y);
+                return new King(playerType, row, col);
                 break;
             case "P":
-                return new Pawn(playerType, x, y);
+                return new Pawn(playerType, row, col);
                 break;
             default:
-                return null; // no chess piece at x,y
+                return null; // no chess piece at row,col
                 break;
         }
 
@@ -241,10 +265,10 @@ function ChessBoard(chessBoardConfig){
     var init = function(){
         // initialize rows
         this.board = [];
-        for(var i = 0; i < this.rows; i++){
+        for(var i = 0; i < this.numRows; i++){
             // initialize cols
             var innerRow = [];
-            for(var j = 0; j< this.cols; j++){
+            for(var j = 0; j< this.numCols; j++){
                 innerRow.push(null);
             }
             this.board.push(innerRow);
@@ -265,8 +289,8 @@ function Player(playerType){
 // A move consists of a chessPiece and a destination coordinate
 // chessPieceType: Symbol denoting chess piece {king: "K", queen: "Q", knight: "N", bishop: "B", rook: "R", pawn: "P"}
 // playerType : 0 = white, 1 = black
-// sourceCoordinate: source Coordinate as (x,y) (starting position of the chess piece)
-// destinationCoordinate: destination Coordinate as (x,y) (destination of the chess piece)
+// sourceCoordinate: source Coordinate as (row,y) (starting position of the chess piece)
+// destinationCoordinate: destination Coordinate as (row,y) (destination of the chess piece)
 function Move(chessPieceType, playerType, sourceCoordinate, destinationCoordinate){
     this.chessPieceType = chessPieceType;
     this.playerType = playerType;
@@ -335,18 +359,22 @@ function GetListOfLegalChessMovesByPlayer(chessBoardConfiguration, playerType){
     //PrintChessBoard(chessBoard);
 
     var allMoves = [];
-    // consider white pieces only
-    if(playerType == PlayerType.white){
-        var chessPieces = chessBoard.playerWhite.chessPieces;
-        for(var i = 0; i < chessBoard.playerWhite.chessPieces.length; i++){
-            var piece = chessPieces[i];
-            // console.log(piece.chessPieceType + " x:" + piece.coordinate.x  + " y:" + piece.coordinate.y);
-            var moves = piece.getAvailableMoves(chessBoard.board)
-            if (moves != null && moves.length > 0) {
-                allMoves = allMoves.concat(moves);
-            }
-            //console.log(moves);
-        }
+    var chessPieces = chessBoard.playerWhite.chessPieces;
+    if(playerType == PlayerType.black){
+        chessPieces = chessBoard.playerBlack.chessPieces
     }
+
+    // get possible moves
+    for(var i = 0; i < chessBoard.playerWhite.chessPieces.length; i++){
+        var piece = chessPieces[i];
+        // console.log(piece.chessPieceType + " row:" + piece.coordinate.row  + " col:" + piece.coordinate.col);
+        var moves = piece.getAvailableMoves(chessBoard.board)
+        if (moves != null && moves.length > 0) {
+            allMoves = allMoves.concat(moves);
+        }
+        //console.log(moves);
+    }
+
     console.log(allMoves);
+    return allMoves;
 }
