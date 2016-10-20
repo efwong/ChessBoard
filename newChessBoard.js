@@ -2,19 +2,95 @@
 // Player enum to determine white or black player
 var PlayerType = {white: 0, black: 1};
 var ChessPieceType = {king: "K", queen: "Q", knight: "N", bishop: "B", rook: "R", pawn: "P"};
-//var direction = {N: 0, NE: 1, E: 2, SE: 3, S: 4, SW: 5, W: 6, NW 7};
+//var DirectionType = {N: 0, NE: 1, E: 2, SE: 3, S: 4, SW: 5, W: 6, NW 7};
 
 var ChessHelper = (function(){
+    function isCoordinateWithinBoundaries(coordinate) {
+        return coordinate.row < 8 && coordinate.row >= 0 && coordinate.col < 8 && coordinate.col >= 0;
+    }
+    function movePieceInOneDirection(chessPiece, board, toBoundaries, rowIncrement, colIncrement) {
+        var availableMoves = [];
+        var newCoordinate = new Coordinate(chessPiece.coordinate.row + rowIncrement, chessPiece.coordinate.col+colIncrement);
+        var destinationPiece = null; // piece at (row,col) in board
+        var newMove = null; // stores new Move based on the newCoordinate
+        while(isCoordinateWithinBoundaries(newCoordinate)){ // check within boundaries
+            destinationPiece = board[newCoordinate.row][newCoordinate.col];
+            newMove = new Move(chessPiece.chessPieceType, chessPiece.playerType, chessPiece.coordinate, newCoordinate);
+            if (destinationPiece != null) {
+                // encountered a chess piece, check if it's white or black
+                if (chessPiece.isWhite() != destinationPiece.isWhite()) {
+                    // white capture black or vice versa, move stops
+                    // valid move
+                    availableMoves.push(newMove);
+                }
+                break;
+            } else {
+                // encountered empty square, keep going
+                availableMoves.push(newMove);
+            }
+
+            if(!toBoundaries){
+                // if not to boundaries, run once only
+                break;
+            }
+            newCoordinate.row += rowIncrement; // increment rows to move North/South
+            newCoordinate.col += colIncrement; // increment rows to move West/East
+        }
+        return availableMoves;
+    }
     return{
-        isCoordinateWithinBoundaries: function(coordinate){
-            return coordinate.row < 8 && coordinate.row >= 0 && coordinate.col < 8 && coordinate.col >= 0;
+        isCoordinateWithinBoundaries: function(coordinate) {
+            return isCoordinateWithinBoundaries(coordinate);
         },
         // Convert a coordinate(row,col) to an algebraic notation as a string
         // (eg.) (1,0) becomes "a1"
-        formatCoordinateToAlgebraicNotation: function(coordinate){
+        formatCoordinateToAlgebraicNotation: function(coordinate) {
             var coordinateRank = coordinate.row+1; // rows
             var coordinateFile = String.fromCharCode(97 + coordinate.col); // letters a -> h denoting the column
             return coordinateFile + coordinateRank;
+        },
+
+        // return a list of coordinates
+        // input:
+        //      chessPiece: chess piece containing coordinate information
+        //      board: 2d grid containing ChessPieces
+        //      toBoundaries: true -> propagate until boundaries or obstacle, false-> (king) propagate a length of 1 away from the chessPiece
+        //      hasN: true->propagate North
+        //      hasNE: true-> propagate North East
+        //      hasE: true-> propagate East
+        //      hasSE: true-> propagate South East
+        //      hasS: true-> propagate South
+        //      hasSW: true-> propagate South West
+        //      hasW: true-> propagate West
+        //      hasNW: true-> propagate North West
+        movePieceInMultiDirections: function(chessPiece, board, toBoundaries, hasN, hasNE, hasE, hasSE, hasS, hasSW, hasW, hasNW) {
+            var availableMoves = [];
+            if (hasN) { // move north
+                var moves = movePieceInOneDirection(chessPiece, board, toBoundaries, -1, 0);
+                availableMoves = availableMoves.concat(moves);
+            }
+            if (hasNE) {// move North East
+                availableMoves = availableMoves.concat(movePieceInOneDirection(chessPiece, board, toBoundaries, -1, 1));
+            }
+            if (hasE) {// move East
+                availableMoves = availableMoves.concat(movePieceInOneDirection(chessPiece, board, toBoundaries, 0, 1));
+            }
+            if (hasSE) {// move South East
+                availableMoves = availableMoves.concat(movePieceInOneDirection(chessPiece, board, toBoundaries, 1, 1));
+            }
+            if (hasS) {// move South
+                availableMoves = availableMoves.concat(movePieceInOneDirection(chessPiece, board, toBoundaries, 1, 0));
+            }
+            if (hasSW) {// move South West
+                availableMoves = availableMoves.concat(movePieceInOneDirection(chessPiece, board, toBoundaries, 1, -1));
+            }
+            if (hasW) {// move West
+                availableMoves = availableMoves.concat(movePieceInOneDirection(chessPiece, board, toBoundaries, 0, -1));
+            }
+            if (hasNW) {// move North West
+                availableMoves = availableMoves.concat(movePieceInOneDirection(chessPiece, board, toBoundaries, -1, -1));
+            }
+            return availableMoves;
         }
     }
 })();
@@ -36,9 +112,6 @@ function ChessPiece(chessPieceType, playerType, row , col){
 ChessPiece.prototype.isWhite = function(){
     return this.playerType == PlayerType.white;
 };
-// only use bfsMove for Queen, King, Rook, bishop (pieces with directional moves that cannot leap over other pieces)
-ChessPiece.prototype.bfsMove = function(board, untilBoundary){
-};
 ChessPiece.prototype.getAvailableMoves = function(board){
 };
 
@@ -49,12 +122,29 @@ function King(playerType, row, col){
 King.prototype = Object.create(ChessPiece.prototype);
 King.prototype.constructor = ChessPiece;
 
+// get all available moves for a King
+// Rules:
+//      1) The King can move one square across any direction (horizontally, vertically, and diagonally) (N, NE, E, SE, S, SW, W, NW)
+King.prototype.getAvailableMoves = function(board){
+    // Move King N, NE, E, SE, S, SW, W, NW
+    return ChessHelper.movePieceInMultiDirections(this, board, false, true, true, true, true, true, true, true, true);
+};
+
 // Queen Piece
 function Queen(playerType, row, col){
     ChessPiece.call(this, ChessPieceType.queen, playerType, row, col);
 }
 Queen.prototype = Object.create(ChessPiece.prototype);
 Queen.prototype.constructor = ChessPiece;
+
+// get all available moves for a Queen
+// Rules:
+//      1) The Queen can move across any direction (horizontally, vertically, and diagonally) (N, NE, E, SE, S, SW, W, NW)
+//      2) The Queen cannot jump over pieces
+Queen.prototype.getAvailableMoves = function(board){
+    // Move Queen N, NE, E, SE, S, SW, W, NW
+    return ChessHelper.movePieceInMultiDirections(this, board, true, true, true, true, true, true, true, true, true);
+};
 
 // Bishop Piece
 function Bishop(playerType, row, col){
@@ -63,12 +153,31 @@ function Bishop(playerType, row, col){
 Bishop.prototype = Object.create(ChessPiece.prototype);
 Bishop.prototype.constructor = ChessPiece;
 
+// get all available moves for a bishop
+// Rules:
+//      1) Bishops can move diagonally in any direction (NE, SE, SW, NW)
+//      2) Bishops cannot jump over pieces
+Bishop.prototype.getAvailableMoves = function(board){
+    // Move Rook North, East, South, West
+    //hasN, hasNE, hasE, hasSE, hasS, hasSW, hasW, hasNW
+    return ChessHelper.movePieceInMultiDirections(this, board, true, false, true, false, true, false, true, false, true);
+};
+
 // Rook Piece
 function Rook(playerType, row, col){
     ChessPiece.call(this, ChessPieceType.rook, playerType, row, col);
 }
 Rook.prototype = Object.create(ChessPiece.prototype);
 Rook.prototype.constructor = ChessPiece;
+
+// get all available moves for a rook
+// Rules:
+//      1) Rooks can move any direction horizontally or vertically through any unoccupied squares
+//      2) Rooks cannot jump over pieces
+Rook.prototype.getAvailableMoves = function(board){
+    // Move Rook North, East, South, West
+    return ChessHelper.movePieceInMultiDirections(this, board, true, true, false, true, false, true, false, true, false);
+};
 
 // Knight Piece
 function Knight(playerType, row, col){
@@ -78,7 +187,7 @@ Knight.prototype = Object.create(ChessPiece.prototype);
 Knight.prototype.constructor = ChessPiece;
 // get all available moves for a knight
 // Rules:
-//      1) Knights can move 2 spaces diagonally and one space vertically
+//      1) Knights can move 2 squares diagonally and one square vertically
 //      2) Knights can jump over other pieces
 Knight.prototype.getAvailableMoves = function(board){
     var availableMoves = [];
@@ -97,8 +206,7 @@ Knight.prototype.getAvailableMoves = function(board){
             var chessPiece = board[newCoordinate.row][newCoordinate.col];
             var newMove = new Move(this.chessPieceType, this.playerType, this.coordinate, newCoordinate);
             if (chessPiece == null ||
-                this.isWhite() && chessPiece.playerType == PlayerType.black || // white piece can capture black
-                !this.isWhite() && chessPiece.playerType == PlayerType.white) { // black can capture white
+                (this.isWhite() != chessPiece.isWhite())) { // black can capture white or vice versa
                 // empty space -> knight can jump here
                 availableMoves.push(newMove);
             }
@@ -116,10 +224,10 @@ Pawn.prototype.constructor = ChessPiece;
 
 // get all available moves for the pawn
 // Rules:
-//      1) pawns can move forward at most 2 spaces
+//      1) pawns can move forward at most 2 squares
 //          a) any piece in directly in front will block movement for the pawn
-//          b) for its initial move, the pawn can move forward 2 spaces, otherwise it can only move forward one
-//      2) pawns can capture diagonally one space in front (only if there is an enemy piece)
+//          b) for its initial move, the pawn can move forward 2 squares, otherwise it can only move forward one
+//      2) pawns can capture diagonally one square in front (only if there is an enemy piece)
 //      3) pawns can only move forward
 Pawn.prototype.getAvailableMoves = function(board){
 
@@ -345,14 +453,6 @@ function PrintChessBoard(chessBoard){
 //                                       ["BP","BP","BP","BP","BP","BP","BP","BP"],
 //                                       ["BR","BN","BB","BQ","BK","BB","BN","BR"]];
 
-var initialChessBoardConfiguration = [["WR","WN","WB","WQ","WK","WB","WN","WR"],
-                                      [null,"WP",null,null,null,null,null,null],
-                                      ["BP","BP",null,null,null,null,null,null],
-                                      [null,null,null,null,null,null,null,null],
-                                      [null,null,null,null,null,null,null,null],
-                                      [null,null,null,null,null,null,null,null],
-                                      [null,null,null,null,null,null,null,null],
-                                      ["BR","BN","BB","BQ","BK","BB","BN","BR"]];
 
 function GetListOfLegalChessMovesByPlayer(chessBoardConfiguration, playerType){
     var chessBoard = new ChessBoard(chessBoardConfiguration);

@@ -7,7 +7,15 @@
 <script src="newChessBoard.js"></script>
 <script src="test.js"></script>
 <script type="text/Javascript">
-    //GetListOfLegalChessMovesByPlayer(initialChessBoardConfiguration, 0);
+    var initialChessBoardConfiguration = [["WR","WN","WB","WQ","WK","WB","WN","WR"],
+                                      [null,"WP",null,null,null,null,null,null],
+                                      ["BP","BP",null,null,null,null,null,null],
+                                      [null,null,null,null,null,null,null,null],
+                                      [null,null,null,null,null,null,null,null],
+                                      [null,null,null,null,null,null,null,null],
+                                      [null,null,null,null,null,null,null,null],
+                                      ["BR","BN","BB","BQ","BK","BB","BN","BR"]];
+    GetListOfLegalChessMovesByPlayer(initialChessBoardConfiguration, 0);
 </script>
 </body>
 </html>

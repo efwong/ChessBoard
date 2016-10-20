@@ -1,3 +1,5 @@
+// Testing chess pieces for basic functionality
+
 function assert(condition, message) {
     if (!condition) {
         throw message || "failed";
@@ -197,3 +199,53 @@ config = [["WN",null,null,null,null,null,null,null],
           [null,null,null,null,null,null,null,null]];
 moves = GetListOfLegalChessMovesByPlayer(config, 0);
 assert(moves.length == 2, "Failed: White Knight should only have 2 possible moves.");
+
+
+// Test Rook
+config = [[null,null,null,null,null,null,null,null],
+          [null,null,null,null,null,null,null,null],
+          [null,null,null,null,null,null,null,null],
+          [null,null,null,null,"WR",null,null,null],
+          [null,null,null,null,null,null,null,null],
+          [null,null,null,null,null,null,null,null],
+          [null,null,null,null,null,null,null,null],
+          [null,null,null,null,null,null,null,null]];
+moves = GetListOfLegalChessMovesByPlayer(config, 0);
+assert(moves.length == 14, "Failed: White Rook should only have 14 possible moves.");
+
+// Test Bishop
+config = [[null,null,"WB",null,null,null,null,null],
+          [null,null,null,null,null,null,null,null],
+          [null,null,null,null,null,null,null,null],
+          [null,null,null,null,null,null,null,null],
+          [null,null,null,null,null,null,null,null],
+          [null,null,null,null,null,null,null,null],
+          [null,null,null,null,null,null,null,null],
+          [null,null,null,null,null,null,null,null]];
+moves = GetListOfLegalChessMovesByPlayer(config, 0);
+assert(moves.length == 7, "Failed: White Bishop should only have 7 possible moves.");
+
+// Test Queen
+config = [[null,null,null,null,null,null,null,null],
+          [null,null,null,null,null,null,null,null],
+          [null,null,null,null,null,null,null,null],
+          [null,null,null,null,"WQ",null,null,null],
+          [null,null,null,null,null,null,null,null],
+          [null,null,null,null,null,null,null,null],
+          [null,null,null,null,null,null,null,null],
+          [null,null,null,null,null,null,null,null]];
+moves = GetListOfLegalChessMovesByPlayer(config, 0);
+assert(moves.length == 27, "Failed: White Queen should only have 27 possible moves.");
+
+
+// Test King
+config = [[null,null,null,null,null,null,null,null],
+          [null,null,null,null,null,null,null,null],
+          [null,null,null,null,null,null,null,null],
+          [null,null,null,null,"WK",null,null,null],
+          [null,null,null,null,null,null,null,null],
+          [null,null,null,null,null,null,null,null],
+          [null,null,null,null,null,null,null,null],
+          [null,null,null,null,null,null,null,null]];
+moves = GetListOfLegalChessMovesByPlayer(config, 0);
+assert(moves.length == 8, "Failed: White King should only have 8 possible moves.");
