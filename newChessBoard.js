@@ -83,8 +83,8 @@ Knight.prototype.constructor = ChessPiece;
 Knight.prototype.getAvailableMoves = function(board){
     var availableMoves = [];
     var possibleCoordinates = [new Coordinate(this.coordinate.row - 2, this.coordinate.col + 1), // North 2, right 1
-                                new Coordinate(this.coordinate.row + 1, this.coordinate.col + 2), // East 2, North 1
-                                new Coordinate(this.coordinate.row - 1, this.coordinate.col + 2), // East 2, South 1
+                                new Coordinate(this.coordinate.row - 1, this.coordinate.col + 2), // East 2, North 1
+                                new Coordinate(this.coordinate.row + 1, this.coordinate.col + 2), // East 2, South 1
                                 new Coordinate(this.coordinate.row + 2, this.coordinate.col + 1), // South 2, East 1
                                 new Coordinate(this.coordinate.row + 2, this.coordinate.col - 1), // South 2, West 1
                                 new Coordinate(this.coordinate.row + 1, this.coordinate.col - 2), // West 2, South 1
@@ -365,7 +365,7 @@ function GetListOfLegalChessMovesByPlayer(chessBoardConfiguration, playerType){
     }
 
     // get possible moves
-    for(var i = 0; i < chessBoard.playerWhite.chessPieces.length; i++){
+    for(var i = 0; i < chessPieces.length; i++){
         var piece = chessPieces[i];
         // console.log(piece.chessPieceType + " row:" + piece.coordinate.row  + " col:" + piece.coordinate.col);
         var moves = piece.getAvailableMoves(chessBoard.board)
