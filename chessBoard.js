@@ -10,7 +10,8 @@ function Coordinate(x, y){
 }
 
 // Base ChessPiece Class
-function ChessPiece(chessType, x , y){
+function ChessPiece(chessType, playerType, x , y){
+	this.playerType = playerType
 	this.coordinate = new Coordinate(x,y);
 	this.chessType = chessType;
 }
@@ -94,36 +95,36 @@ function ChessBoard(){
 
 		// (0,0) to (1,7) are the initial coordinates for the white player
 		// initialize white pawns
-		initializePawns(1);
+		initializePawns(1, PlayerType.white);
 		// initialize white knights
-		initializeKnights(0);
+		initializeKnights(0, PlayerType.white);
 		// iniialize white king
-		initializeKing(0);
+		initializeKing(0, PlayerType.white);
 		// initialize white queen
-		initializeQueen(0);
+		initializeQueen(0, PlayerType.white);
 		// initialize white bishop
-		initializeBishops(0);
+		initializeBishops(0, PlayerType.white);
 		// initialize white rook
-		initializeRooks(0);
+		initializeRooks(0, PlayerType.white);
 
 		// (6,0) to (7,7) are the initial coordinates for the black player
 		// initialize black pawns
-		initializePawns(6);
+		initializePawns(6, PlayerType.black);
 		// initialize black knights
-		initializeKnights(7);
+		initializeKnights(7, PlayerType.black);
 		// initialize black king
-		initializeKing(7);
+		initializeKing(7, PlayerType.black);
 		// initialize black Queen
-		initializeQueen(7);
+		initializeQueen(7, PlayerType.black);
 		// initialize black bishop
-		initializeBishops(7);
+		initializeBishops(7, PlayerType.black);
 		// initialize black rook
-		initializeRooks(7);
+		initializeRooks(7, PlayerType.black);
 		
 	}.bind(this);
 
 	// Initialize Pawn to row 1 or 6 (white, black)
-	var initializePawns = function(row){
+	var initializePawns = function(row, playerType){
 		for(var i = 0; i < this.cols; i ++){
 			this.board[row][i] = new Pawn(row,i);
 		}
@@ -131,33 +132,33 @@ function ChessBoard(){
 
 	// Initialize Knight to column 1 or 6
 	// row = {0,7} valid for white, black
-	var initializeKnights = function(row){
+	var initializeKnights = function(row, playerType){
 		this.board[row][1] = new Knight(row,1);
 		this.board[row][6] = new Knight(row,6);
 	}.bind(this);
 
 	// Initialize King to column 4
 	// row = {0,7} valid for white, black
-	var initializeKing = function(row){
+	var initializeKing = function(row, playerType){
 		this.board[row][4] = new King(row,4);
 	}.bind(this);
 
 	// Initialize Queen to column 3
 	// row = {0,7} valid for white, black
-	var initializeQueen = function(row){
+	var initializeQueen = function(row, playerType){
 		this.board[row][3] = new Queen(row,3);
 	}.bind(this);
 	
 	// Initialize Bishop to column 2 or 5
 	// row = {0,7} valid for white, black
-	var initializeBishops = function(row){
+	var initializeBishops = function(row, playerType){
 		this.board[row][2] = new Bishop(row,2);
 		this.board[row][5] = new Bishop(row,5);
 	}.bind(this);
 
 	// Initialize Rook to column 0 or 7
 	// row = {0,7} valid for white, black
-	var initializeRooks = function(row){
+	var initializeRooks = function(row, playerType){
 		this.board[row][0] = new Rook(row,0);
 		this.board[row][7] = new Rook(row,7);
 	}.bind(this);
